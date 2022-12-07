@@ -29,6 +29,20 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class RemindItem extends StatelessWidget {
+  const RemindItem({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: const <Widget>[
+        Text('test'),
+        Text('削除'),
+      ],
+    );
+  }
+
+}
+
 class RemindListPage extends StatefulWidget {
 
   const RemindListPage({super.key});
@@ -50,10 +64,15 @@ class _RemindListPageState extends State<RemindListPage> {
       body: ListView.builder(
         itemCount: todoList.length,
         itemBuilder: (context, index) {
-          return Card(
-            child: ListTile(
-              title: Text(todoList[index]),
-            ),
+          return Column(
+              children: <Widget>[
+                Card(
+                  child: ListTile(
+                    title: Text(todoList[index]),
+                 ),
+                ),
+                const RemindItem(),
+              ],
           );
         },
       ),
