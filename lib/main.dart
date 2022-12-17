@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -29,19 +31,46 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class RemindItem extends StatelessWidget {
-  const RemindItem({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: const <Widget>[
-        Text('test'),
-        Text('削除'),
-      ],
-    );
-  }
+// class RemindItem extends StatefulWidget {
+//
+//   // const RemindItem({Key? key, required this.title}): super(key: key);
+//   // final Text title;
+//
+//   const RemindItem({Key? key}) : super(key: key);
+//
+//
+//   @override
+//   State<RemindItem> createState() => _RemindItemState();
+// }
 
-}
+// class _RemindItemState extends State<RemindItem> {
+//
+//   String _itemText = '';
+//   bool _isDelete = false;
+//
+//   // void _add (String value) {
+//   //   setState(() {
+//   //     _itemText = value;
+//   //   });
+//   // }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Row(
+//       children: <Widget>[
+//         Text(_itemText),
+//         TextButton(
+//           onPressed: () {
+//             setState(() {
+//               _isDelete = !_isDelete;
+//             });
+//           },
+//           child: _isDelete ? const Text('削除') : const Text('-'),
+//         ),
+//       ],
+//     );
+//   }
+// }
 
 class RemindListPage extends StatefulWidget {
 
@@ -55,6 +84,8 @@ class RemindListPage extends StatefulWidget {
 class _RemindListPageState extends State<RemindListPage> {
   List<String> todoList = [];
 
+  List<Map> test = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,12 +97,19 @@ class _RemindListPageState extends State<RemindListPage> {
         itemBuilder: (context, index) {
           return Column(
               children: <Widget>[
-                Card(
-                  child: ListTile(
-                    title: Text(todoList[index]),
-                 ),
-                ),
-                const RemindItem(),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      // リスト追加
+                      todoList.removeAt(index);
+                    });
+                  },
+                  child: Card(
+                    child: ListTile(
+                      title: Text(todoList[index]),
+                    ),
+                  ),
+                )
               ],
           );
         },
@@ -84,13 +122,12 @@ class _RemindListPageState extends State<RemindListPage> {
               return const RemindAddPage();
             }),
           );
-          if (newListText != null) {
-            // キャンセルした場合は newListText が null となるので注意
-            setState(() {
-              // リスト追加
-              todoList.add(newListText);
-            });
-          }
+          if (newListText == null) return;
+          // キャンセルした場合は newListText が null となるので注意
+          setState(() {
+            // リスト追加
+            todoList.add(newListText);
+          });
         },
         child: const Icon(Icons.add),
       ),
@@ -108,6 +145,7 @@ class RemindAddPage extends StatefulWidget {
 class _RemindAddPageState extends State<RemindAddPage> {
   // 入力されたテキストをデータとして持つ
   String _text = '';
+
 
   // データを元に表示するWidget
   @override
@@ -146,6 +184,18 @@ class _RemindAddPageState extends State<RemindAddPage> {
               child: const Text('リスト追加', style: TextStyle(color: Colors.white)),
             ),
           ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    // データを変更
+
+                  });
+                },
+                child: const Text('削除', style: TextStyle(color: Colors.white)),
+              ),
+            ),
             const SizedBox(height: 8),
         SizedBox(
           // 横幅いっぱいに広げる
