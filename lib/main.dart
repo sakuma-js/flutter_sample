@@ -1,9 +1,11 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import './notifiers/todo_notifier.dart';
+import './../models/todo.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -26,190 +28,119 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.red,
       ),
-      home: const RemindListPage(),
+      home: const TopPage(),
     );
   }
 }
 
-// class RemindItem extends StatefulWidget {
-//
-//   // const RemindItem({Key? key, required this.title}): super(key: key);
-//   // final Text title;
-//
-//   const RemindItem({Key? key}) : super(key: key);
-//
-//
-//   @override
-//   State<RemindItem> createState() => _RemindItemState();
-// }
-
-// class _RemindItemState extends State<RemindItem> {
-//
-//   String _itemText = '';
-//   bool _isDelete = false;
-//
-//   // void _add (String value) {
-//   //   setState(() {
-//   //     _itemText = value;
-//   //   });
-//   // }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Row(
-//       children: <Widget>[
-//         Text(_itemText),
-//         TextButton(
-//           onPressed: () {
-//             setState(() {
-//               _isDelete = !_isDelete;
-//             });
-//           },
-//           child: _isDelete ? const Text('削除') : const Text('-'),
-//         ),
-//       ],
-//     );
-//   }
-// }
-
-class RemindListPage extends StatefulWidget {
-
-  const RemindListPage({super.key});
-  @override
-  State<RemindListPage> createState() => _RemindListPageState();
-
-}
-
-// リスト一覧画面用Widget
-class _RemindListPageState extends State<RemindListPage> {
-  List<String> todoList = [];
-
-  List<Map> test = [];
+class TopPage extends ConsumerWidget {
+  const TopPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    List<Todo> todos = ref.watch(todoProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('リスト一覧'),
       ),
-      body: ListView.builder(
-        itemCount: todoList.length,
-        itemBuilder: (context, index) {
-          return Column(
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      // リスト追加
-                      todoList.removeAt(index);
-                    });
-                  },
-                  child: Card(
-                    child: ListTile(
-                      title: Text(todoList[index]),
-                    ),
-                  ),
-                )
-              ],
-          );
-        },
+      body: ListView(
+        children: [
+          for (final todo in todos)
+            CheckboxListTile(
+              value: todo.done,
+              onChanged: (value) =>
+                  ref.read(todoProvider.notifier).toggleDone(todo.id),
+              title: Text(todo.text),
+            ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
         onPressed: () async {
-          final newListText = await Navigator.of(context).push(
+          await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) {
               // 遷移先の画面としてリスト追加画面を指定
               return const RemindAddPage();
             }),
           );
-          if (newListText == null) return;
-          // キャンセルした場合は newListText が null となるので注意
-          setState(() {
-            // リスト追加
-            todoList.add(newListText);
-          });
         },
-        child: const Icon(Icons.add),
       ),
     );
   }
 }
 
-class RemindAddPage extends StatefulWidget {
+final textProvider = StateProvider((ref) => '');
+
+class RemindAddPage extends ConsumerWidget {
   const RemindAddPage({super.key});
 
-  @override
-  State<RemindAddPage> createState() => _RemindAddPageState();
-}
-
-class _RemindAddPageState extends State<RemindAddPage> {
   // 入力されたテキストをデータとして持つ
-  String _text = '';
-
 
   // データを元に表示するWidget
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textState = ref.watch(textProvider);
+    final textNotifier = ref.watch(textProvider.notifier);
+    const uuid = Uuid();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('リスト追加'),
       ),
       body: Container(
         // 余白を付ける
-        padding: EdgeInsets.all(64),
+        padding: const EdgeInsets.all(64),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             // 入力されたテキストを表示
-            Text(_text, style: TextStyle(color: Colors.blue)),
+            Text(textState, style: const TextStyle(color: Colors.blue)),
             const SizedBox(height: 8),
             // テキスト入力
             TextField(
               // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
               onChanged: (String value) {
-                // データが変更したことを知らせる（画面を更新する）
-                setState(() {
-                  // データを変更
-                  _text = value;
-                });
+                textNotifier.state = value;
               },
             ),
             const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(_text);
-              },
-              child: const Text('リスト追加', style: TextStyle(color: Colors.white)),
-            ),
-          ),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  setState(() {
-                    // データを変更
+                  final newTodo = Todo(id: uuid.v4(), text: textState, description: '', done: false);
+                  ref.read(todoProvider.notifier).add(newTodo);
+                  textNotifier.state = '';
+                  Navigator.of(context).pop();
+                },
+                child:
+                    const Text('リスト追加', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
 
-                  });
                 },
                 child: const Text('削除', style: TextStyle(color: Colors.white)),
               ),
             ),
             const SizedBox(height: 8),
-        SizedBox(
-          // 横幅いっぱいに広げる
-          width: double.infinity,
-          // キャンセルボタン
-          child: TextButton(
-            // ボタンをクリックした時の処理
-            onPressed: () {
-              // "pop"で前の画面に戻る
-              Navigator.of(context).pop();
-            },
-            child: const Text('キャンセル'),
-          ),
-        ),
+            SizedBox(
+              // 横幅いっぱいに広げる
+              width: double.infinity,
+              // キャンセルボタン
+              child: TextButton(
+                // ボタンをクリックした時の処理
+                onPressed: () {
+                  // "pop"で前の画面に戻る
+                  Navigator.of(context).pop();
+                },
+                child: const Text('キャンセル'),
+              ),
+            ),
           ],
         ),
       ),
