@@ -138,9 +138,16 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  final newTodo = Todo(
-                      id: uuid.v4(), text: text, description: '', done: false);
-                  ref.read(todoProvider.notifier).add(newTodo);
+                  if (widget.id == null) {
+                    final newTodo = Todo(
+                        id: uuid.v4(), text: text, description: '', done: false);
+                    ref.read(todoProvider.notifier).add(newTodo);
+                  } else {
+                    final editTodo = Todo(
+                      id: widget.id ?? '', text: text, description: '', done: false);
+                    ref.read(todoProvider.notifier).edit(editTodo);
+                  }
+
                   Navigator.of(context).pop();
                 },
                 child:
@@ -149,10 +156,14 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
             ),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
+              child: widget.id != null ? ElevatedButton(
+                onPressed: () {
+                  if (widget.id == null) return;
+                  ref.read(todoProvider.notifier).remove(widget.id ?? '');
+                  Navigator.of(context).pop();
+                },
                 child: const Text('削除', style: TextStyle(color: Colors.white)),
-              ),
+              ) : null,
             ),
             const SizedBox(height: 8),
             SizedBox(

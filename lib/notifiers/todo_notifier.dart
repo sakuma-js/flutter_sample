@@ -27,4 +27,10 @@ class TodosNotifier extends StateNotifier<List<Todo>> {
         .map((t) => t.id == id ? t.copyWith(done: !t.done) : t)
         .toList();
   }
+
+  void edit(Todo item) {
+    state = state
+        .map((t) => t.id == item.id ? item : t)
+        .toList();
+  }
 }
