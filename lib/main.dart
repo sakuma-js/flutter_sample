@@ -47,12 +47,27 @@ class TopPage extends ConsumerWidget {
       body: ListView(
         children: [
           for (final todo in todos)
-            CheckboxListTile(
-              value: todo.done,
-              onChanged: (value) =>
-                  ref.read(todoProvider.notifier).toggleDone(todo.id),
-              title: Text(todo.text),
-            ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) {
+                    // 遷移先の画面としてリスト追加画面を指定
+                    return RemindEditPage(id: todo.id);
+                  }),
+                );
+              },
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(todo.text),
+                    Checkbox(
+                      value: todo.done,
+                      onChanged: (value) =>
+                          ref.read(todoProvider.notifier).toggleDone(todo.id),
+                    ),
+                  ]),
+            )
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -61,7 +76,7 @@ class TopPage extends ConsumerWidget {
           await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) {
               // 遷移先の画面としてリスト追加画面を指定
-              return const RemindAddPage();
+              return const RemindEditPage();
             }),
           );
         },
@@ -70,18 +85,30 @@ class TopPage extends ConsumerWidget {
   }
 }
 
-final textProvider = StateProvider((ref) => '');
+class RemindEditPage extends ConsumerStatefulWidget {
+  const RemindEditPage({Key? key, this.id}) : super(key: key);
+  final String? id;
 
-class RemindAddPage extends ConsumerWidget {
-  const RemindAddPage({super.key});
+  @override
+  RemindEditPageState createState() => RemindEditPageState();
+}
 
-  // 入力されたテキストをデータとして持つ
+class RemindEditPageState extends ConsumerState<RemindEditPage> {
+  late String text;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    List<Todo> todos = ref.watch(todoProvider);
+    setState(() => text = widget.id != null
+        ? todos.firstWhere((element) => element.id == widget.id).text
+        : '');
+  }
 
   // データを元に表示するWidget
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final textState = ref.watch(textProvider);
-    final textNotifier = ref.watch(textProvider.notifier);
+  Widget build(BuildContext context) {
     const uuid = Uuid();
 
     return Scaffold(
@@ -94,14 +121,16 @@ class RemindAddPage extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(widget.id ?? ''),
             // 入力されたテキストを表示
-            Text(textState, style: const TextStyle(color: Colors.blue)),
+            Text(text, style: const TextStyle(color: Colors.blue)),
             const SizedBox(height: 8),
             // テキスト入力
             TextField(
+              controller: TextEditingController(text: text),
               // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
               onChanged: (String value) {
-                textNotifier.state = value;
+                text = value;
               },
             ),
             const SizedBox(height: 8),
@@ -109,21 +138,19 @@ class RemindAddPage extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  final newTodo = Todo(id: uuid.v4(), text: textState, description: '', done: false);
+                  final newTodo = Todo(
+                      id: uuid.v4(), text: text, description: '', done: false);
                   ref.read(todoProvider.notifier).add(newTodo);
-                  textNotifier.state = '';
                   Navigator.of(context).pop();
                 },
                 child:
-                    const Text('リスト追加', style: TextStyle(color: Colors.white)),
+                    Text(widget.id != null ? 'リスト編集' : 'リスト追加', style: const TextStyle(color: Colors.white)),
               ),
             ),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-
-                },
+                onPressed: () {},
                 child: const Text('削除', style: TextStyle(color: Colors.white)),
               ),
             ),
@@ -147,3 +174,4 @@ class RemindAddPage extends ConsumerWidget {
     );
   }
 }
+
