@@ -6,7 +6,8 @@ class Todo with _$Todo {
   const factory Todo({
     required String id,
     required String text,
-    required String memo,
+    required String? memo,
+    required String? label,
     required bool done,
   }) = _Todo;
 }
