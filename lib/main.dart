@@ -118,8 +118,7 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
       body: Container(
         // 余白を付ける
         padding: const EdgeInsets.all(64),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: ListView(
           children: <Widget>[
             Text(widget.id ?? ''),
             // 入力されたテキストを表示
