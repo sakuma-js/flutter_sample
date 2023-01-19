@@ -139,11 +139,11 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
                 onPressed: () {
                   if (widget.id == null) {
                     final newTodo = Todo(
-                        id: uuid.v4(), text: text, description: '', done: false);
+                        id: uuid.v4(), text: text, memo: '', done: false);
                     ref.read(todoProvider.notifier).add(newTodo);
                   } else {
                     final editTodo = Todo(
-                      id: widget.id ?? '', text: text, description: '', done: false);
+                      id: widget.id ?? '', text: text, memo: '', done: false);
                     ref.read(todoProvider.notifier).edit(editTodo);
                   }
 
