@@ -4,6 +4,8 @@ import './notifiers/todo_notifier.dart';
 import './../models/todo.dart';
 import 'package:uuid/uuid.dart';
 
+final searchTextProvider = StateProvider<String>((ref) => '');
+
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -46,6 +48,13 @@ class TopPage extends ConsumerWidget {
       ),
       body: ListView(
         children: [
+          TextField(
+            controller:
+                TextEditingController(text: ref.read(searchTextProvider)),
+            // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
+            onChanged: (value) =>
+                {ref.watch(searchTextProvider.notifier).state = value},
+          ),
           for (final todo in todos)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
