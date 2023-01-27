@@ -33,4 +33,8 @@ class TodosNotifier extends StateNotifier<List<Todo>> {
         .map((t) => t.id == item.id ? item : t)
         .toList();
   }
+
+  List<Todo> match(String text) {
+    return state.where((t) => t.text.contains(text)).toList();
+  }
 }

@@ -40,7 +40,8 @@ class TopPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    List<Todo> todos = ref.watch(todoProvider);
+    // List<Todo> todos = ref.watch(todoProvider);
+    List<Todo> filteredTodos = ref.watch(todoProvider.notifier).match(ref.watch(searchTextProvider));
 
     return Scaffold(
       appBar: AppBar(
@@ -52,10 +53,12 @@ class TopPage extends ConsumerWidget {
             controller:
                 TextEditingController(text: ref.read(searchTextProvider)),
             // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
-            onChanged: (value) =>
-                {ref.watch(searchTextProvider.notifier).state = value},
+            onChanged: (value) => {
+              ref.watch(searchTextProvider.notifier).state = value,
+            },
           ),
-          for (final todo in todos)
+          Text('${filteredTodos.length}件表示中'),
+          for (final todo in filteredTodos)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () async {
