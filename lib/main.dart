@@ -35,13 +35,42 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class TopPage extends ConsumerWidget {
-  const TopPage({super.key});
+final filteredTodosProvider = Provider<List<Todo>>((ref) {
+  final searchText = ref.watch(searchTextProvider);
+  final todos = ref.watch(todoProvider);
+
+  if (searchText == '') {
+    return todos.toList();
+  }
+  return todos.where((t) => t.text.contains(searchText)).toList();
+});
+
+class TopPage extends ConsumerStatefulWidget {
+  const TopPage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  TopPageState createState() => TopPageState();
+}
+
+class TopPageState extends ConsumerState<TopPage> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    _controller = TextEditingController(text: ref.read(searchTextProvider));
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // List<Todo> todos = ref.watch(todoProvider);
-    List<Todo> filteredTodos = ref.watch(todoProvider.notifier).match(ref.watch(searchTextProvider));
+    final filterTodos = ref.watch(filteredTodosProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -50,15 +79,14 @@ class TopPage extends ConsumerWidget {
       body: ListView(
         children: [
           TextField(
-            controller:
-                TextEditingController(text: ref.read(searchTextProvider)),
+            controller: _controller,
             // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
             onChanged: (value) => {
               ref.watch(searchTextProvider.notifier).state = value,
             },
           ),
-          Text('${filteredTodos.length}件表示中'),
-          for (final todo in filteredTodos)
+          Text('${filterTodos.length}件表示中'),
+          for (final todo in filterTodos)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () async {
