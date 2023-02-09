@@ -69,7 +69,7 @@ class TopPageState extends ConsumerState<TopPage> {
 
   @override
   Widget build(BuildContext context) {
-    // List<Todo> todos = ref.watch(todoProvider);
+    List<Todo> todos = ref.watch(todoProvider);
     final filterTodos = ref.watch(filteredTodosProvider);
 
     return Scaffold(
@@ -85,7 +85,11 @@ class TopPageState extends ConsumerState<TopPage> {
               ref.watch(searchTextProvider.notifier).state = value,
             },
           ),
-          Text('${filterTodos.length}件表示中'),
+          if (todos.length != filterTodos.length ||
+              ref.watch(searchTextProvider.notifier).state.isNotEmpty)
+            (filterTodos.isEmpty
+                ? const Text('検索結果に一致するものはありません')
+                : Text('${filterTodos.length}件表示中')),
           for (final todo in filterTodos)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
