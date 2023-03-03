@@ -55,6 +55,8 @@ class TopPage extends ConsumerStatefulWidget {
 class TopPageState extends ConsumerState<TopPage> {
   late TextEditingController _controller;
 
+  bool _visible = false;
+
   @override
   void initState() {
     _controller = TextEditingController(text: ref.read(searchTextProvider));
@@ -73,46 +75,100 @@ class TopPageState extends ConsumerState<TopPage> {
     final filterTodos = ref.watch(filteredTodosProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('リスト一覧'),
-      ),
-      body: ListView(
-        children: [
-          TextField(
-            controller: _controller,
-            // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
-            onChanged: (value) => {
-              ref.watch(searchTextProvider.notifier).state = value,
-            },
-          ),
-          if (todos.length != filterTodos.length ||
-              ref.watch(searchTextProvider.notifier).state.isNotEmpty)
-            (filterTodos.isEmpty
-                ? const Text('検索結果に一致するものはありません')
-                : Text('${filterTodos.length}件表示中')),
-          for (final todo in filterTodos)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) {
-                    // 遷移先の画面としてリスト追加画面を指定
-                    return RemindEditPage(id: todo.id);
-                  }),
-                );
-              },
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(todo.text),
-                    Checkbox(
-                      value: todo.done,
-                      onChanged: (value) =>
-                          ref.read(todoProvider.notifier).toggleDone(todo.id),
+      resizeToAvoidBottomInset: false,
+      body: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (todos.isEmpty)
+              Align(
+                alignment: const Alignment(0, 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    SizedBox(
+                      width: 180,
+                      height: 180,
+                      child: Image.asset('images/empty.png'),
                     ),
-                  ]),
-            )
-        ],
+                    const Text('Add reminder!'),
+                  ],
+                ),
+              ),
+            Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: ListView(
+                  padding: const EdgeInsets.all(6),
+                  children: [
+                    Row(
+                      children: <Widget>[
+                        Flexible(
+                          child: Visibility(
+                              visible: _visible,
+                              maintainAnimation: true,
+                              maintainState: true,
+                              maintainSize: true,
+                              child: TextField(
+                                cursorColor: Colors.deepPurpleAccent,
+                                decoration: const InputDecoration(
+                                    focusedBorder: UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.deepPurple),
+                                )),
+                                autofocus: true,
+                                controller: _controller,
+                                // 入力されたテキストの値を受け取る（valueが入力されたテキスト）
+                                onChanged: (value) => {
+                                  ref.watch(searchTextProvider.notifier).state =
+                                      value,
+                                },
+                              )),
+                        ),
+                        IconButton(
+                          padding: const EdgeInsets.all(0.0),
+                          icon: const Icon(Icons.search,
+                              color: Colors.deepPurple, size: 36),
+                          onPressed: () {
+                            setState(() {
+                              _visible = !_visible;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    if (todos.length != filterTodos.length ||
+                        ref.watch(searchTextProvider.notifier).state.isNotEmpty)
+                      (filterTodos.isEmpty
+                          ? const Text('検索結果に一致するものはありません')
+                          : Text('${filterTodos.length}件表示中')),
+                    for (final todo in filterTodos)
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) {
+                              // 遷移先の画面としてリスト追加画面を指定
+                              return RemindEditPage(id: todo.id);
+                            }),
+                          );
+                        },
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(todo.text),
+                              Checkbox(
+                                value: todo.done,
+                                onChanged: (value) => ref
+                                    .read(todoProvider.notifier)
+                                    .toggleDone(todo.id),
+                              ),
+                            ]),
+                      )
+                  ],
+                )),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
