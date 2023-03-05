@@ -8,6 +8,7 @@ class Todo with _$Todo {
     required String text,
     required String? memo,
     required String? label,
+    required DateTime? dateTime,
     required bool done,
   }) = _Todo;
 }

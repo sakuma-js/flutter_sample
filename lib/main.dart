@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import './notifiers/todo_notifier.dart';
 import './../models/todo.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:intl/intl.dart';
 
 final searchTextProvider = StateProvider<String>((ref) => '');
 
@@ -197,6 +199,7 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
   late String text;
   late String memo;
   late String label;
+  late DateTime? dateTime;
 
   @override
   void didChangeDependencies() {
@@ -213,6 +216,9 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
       label = (widget.id != null
           ? todos.firstWhere((element) => element.id == widget.id).label
           : '')!;
+      dateTime = (widget.id != null
+          ? todos.firstWhere((element) => element.id == widget.id).dateTime
+          : null);
     });
   }
 
@@ -244,6 +250,7 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
                     text: text,
                     memo: memo,
                     label: label,
+                    dateTime: dateTime,
                     done: false);
                 ref.read(todoProvider.notifier).add(newTodo);
               } else {
@@ -252,6 +259,7 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
                     text: text,
                     memo: memo,
                     label: label,
+                    dateTime: dateTime,
                     done: false);
                 ref.read(todoProvider.notifier).edit(editTodo);
               }
@@ -299,6 +307,40 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
               label = value;
             },
           ),
+          const SizedBox(height: 8),
+          const Text('日時'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (dateTime != null) Text(DateFormat('yyyy-MM-dd HH:mm').format(dateTime!), style: const TextStyle(fontSize: 20, color: Colors.black87)),
+              TextButton(
+                child: const Text('日時設定'),
+                onPressed: () {
+                  DatePicker.showDatePicker(context,
+                      showTitleActions: true,
+                      minTime: DateTime(1940, 1, 1).toLocal(),
+                      maxTime: DateTime(2040, 12, 31).toLocal(),
+                      onConfirm: (date) {
+                        DatePicker.showTimePicker(
+                          context,
+                          showSecondsColumn: false,
+                          locale: LocaleType.jp,
+                          currentTime: DateTime.now().toLocal(),
+                          onConfirm: (time) {
+                            final pickDate = DateTime.parse('$date').toLocal();
+                            setState(() {
+                              dateTime = DateTime(pickDate.year, pickDate.month, pickDate.day, time.hour, time.minute);
+                            });
+                          },
+                        );
+                      }, currentTime: DateTime.now(),
+                      locale: LocaleType.jp
+                  );
+                },
+              ),
+            ],
+          ),
+
           SizedBox(
             width: double.infinity,
             child: widget.id != null
