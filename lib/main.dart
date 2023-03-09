@@ -160,12 +160,16 @@ class TopPageState extends ConsumerState<TopPage> {
                         ),
                       ],
                     ),
-                    if (todos.length != filterTodos.length ||
-                        ref.watch(searchTextProvider.notifier).state.isNotEmpty)
-                      (filterTodos.isEmpty
-                          ? const Text('検索結果に一致するものはありません')
-                          : Text('${filterTodos.length}件表示中')),
-                    for (final todo in filterTodos)
+                    Visibility(
+                        visible: todos.length != filterTodos.length ||
+                            ref.watch(searchTextProvider.notifier).state.isNotEmpty,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        maintainSize: true,
+                        child: filterTodos.isEmpty
+                            ? const Text('検索結果に一致するものはありません')
+                            : Text('${filterTodos.length}件表示中')),
+                    for (final todo in (filterTodos.isEmpty ? todos : filterTodos))
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () async {
