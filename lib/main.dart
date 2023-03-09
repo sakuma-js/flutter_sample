@@ -311,7 +311,7 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
                     memo: memo,
                     label: label,
                     dateTime: dateTime,
-                    done: false);
+                    done: done);
                 ref.read(todoProvider.notifier).edit(editTodo);
               }
               if (dateTime != null && !done) scheduleNotifications(dateTime!);
