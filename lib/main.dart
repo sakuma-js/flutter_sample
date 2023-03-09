@@ -5,10 +5,31 @@ import './../models/todo.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 final searchTextProvider = StateProvider<String>((ref) => '');
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // (通知スケジュールに使う)タイムゾーンを設定する
+  tz.initializeTimeZones();
+  final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+  tz.setLocalLocation(tz.getLocation(timeZoneName));
+
+  // flutter_local_notificationsの初期化
+  const AndroidInitializationSettings initializationSettingsAndroid =
+  AndroidInitializationSettings('app_icon');
+
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+  await FlutterLocalNotificationsPlugin().initialize(initializationSettings);
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -201,6 +222,32 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
   late String label;
   late DateTime? dateTime;
 
+  static Future<void> scheduleNotifications(DateTime dateTime,{DateTimeComponents? dateTimeComponents}) async {
+    // 日時をTimeZoneを考慮した日時に変換する
+    final scheduleTime = tz.TZDateTime.from(dateTime, tz.local);
+
+    // 通知をスケジュールする
+    final flnp = FlutterLocalNotificationsPlugin();
+    await flnp.zonedSchedule(
+      1,
+      'スケジュール通知',
+      'あなたがスケジュールした時間になりました',
+      scheduleTime,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          '2',
+          'スケジュール通知',
+          channelDescription: '設定した時刻に通知されます',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      ),
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      androidAllowWhileIdle: true,
+      matchDateTimeComponents: dateTimeComponents,
+    );
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -263,6 +310,7 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
                     done: false);
                 ref.read(todoProvider.notifier).edit(editTodo);
               }
+              if (dateTime != null) scheduleNotifications(dateTime!);
 
               Navigator.of(context).pop();
             },
