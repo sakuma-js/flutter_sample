@@ -221,8 +221,9 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
   late String memo;
   late String label;
   late DateTime? dateTime;
+  late bool done;
 
-  static Future<void> scheduleNotifications(DateTime dateTime,{DateTimeComponents? dateTimeComponents}) async {
+  Future<void> scheduleNotifications(DateTime dateTime,{DateTimeComponents? dateTimeComponents}) async {
     // 日時をTimeZoneを考慮した日時に変換する
     final scheduleTime = tz.TZDateTime.from(dateTime, tz.local);
 
@@ -230,8 +231,8 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
     final flnp = FlutterLocalNotificationsPlugin();
     await flnp.zonedSchedule(
       1,
-      'スケジュール通知',
-      'あなたがスケジュールした時間になりました',
+      text,
+      memo,
       scheduleTime,
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -266,6 +267,9 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
       dateTime = (widget.id != null
           ? todos.firstWhere((element) => element.id == widget.id).dateTime
           : null);
+      done = (widget.id != null
+          ? todos.firstWhere((element) => element.id == widget.id).done
+          : false);
     });
   }
 
@@ -310,7 +314,7 @@ class RemindEditPageState extends ConsumerState<RemindEditPage> {
                     done: false);
                 ref.read(todoProvider.notifier).edit(editTodo);
               }
-              if (dateTime != null) scheduleNotifications(dateTime!);
+              if (dateTime != null && !done) scheduleNotifications(dateTime!);
 
               Navigator.of(context).pop();
             },
